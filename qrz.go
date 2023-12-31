@@ -28,12 +28,12 @@ type Record struct {
 const (
 	databaseFile = "mydatabase.db"
 	tableName    = "mytable"
+	appname      = "com.ki4hdu.qrz"
 )
 
 var debug bool
 
 func getCacheDir() (string, error) {
-	appname := "com.ki4hdu.qrz"
 	// Get the current user
 	currentUser, err := user.Current()
 	if err != nil {
@@ -176,7 +176,7 @@ func buildAppleMapsURL(record Record) string {
 			record.City,
 			record.State),
 		" ",
-		"%20")
+		"+")
 }
 
 func searchDatabase(db *sql.DB, call string) {

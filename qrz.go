@@ -16,6 +16,28 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type Item struct {
+	// UID          string `json:"uid"`
+	// Type         string `json:"type"`
+	Title string `json:"title"`
+	// Valid bool `json:"valid"`
+	Subtitle     string `json:"subtitle"`
+	Arg          string `json:"arg"`
+	// Autocomplete string `json:"autocomplete"`
+	// Action string `json:"action"`
+	Variables struct {
+		Action string `json:"action"`
+	} `json:"variables"`
+	// Icon         struct {
+	// 	Type string `json:"type"`
+	// 	Path string `json:"path"`
+	// } `json:"icon"`
+}
+
+type Items struct {
+	Items []Item `json:"items"`
+}
+
 type Record struct {
 	Callsign  string `json:"callsign"`
 	Firstname string `json:"firstname"`
@@ -32,6 +54,28 @@ const (
 )
 
 var debug bool
+
+func getAsItem(record Record) []Item {
+	var returnValue []Item
+
+	var nameItem Item
+	var addressItem Item
+
+	nameItem.Title = fmt.Sprintf("%s %s", record.Firstname, record.Lastname)
+	nameItem.Subtitle = record.Callsign
+	nameItem.Arg = fmt.Sprintf("%s %s", record.Firstname, record.Lastname) 
+	// nameItem.Valid = true
+	// addressItem.Valid = true
+	addressItem.Title = fmt.Sprintf("%s, %s, %s", record.Address, record.City, record.State)
+	addressItem.Subtitle = "Open in Maps"
+	addressItem.Arg = buildAppleMapsURL(record)
+	addressItem.Variables.Action = "open"
+
+	returnValue = append(returnValue, nameItem)
+	returnValue = append(returnValue, addressItem)
+
+	return returnValue
+}
 
 func getCacheDir() (string, error) {
 	// Get the current user
@@ -199,12 +243,30 @@ func searchDatabase(db *sql.DB, call string) {
 	}
 }
 
+func getAlfredFormat(db *sql.DB, call string) Items {
+	var items Items
+
+	// Query the table for rows matching a regex in column1
+	results, err := queryByRegex(db, call)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, result := range results {
+		items.Items = append(items.Items, getAsItem(result)...)
+	}
+
+	return items
+}
+
 func main() {
+	var alfred bool
 	var reloadDatabse bool
 	var inputFile string
 
 	flag.BoolVar(&debug, "debug", false, "Debug mode")
 	flag.BoolVar(&reloadDatabse, "r", false, "Reload database")
+	flag.BoolVar(&alfred, "alfred", false, "Output form suitable for use in an Alfred filter")
 	flag.StringVar(&inputFile, "input", "/usr/local/share/xastir/fcc/EN.dat", "input file name")
 
 	flag.Parse()
@@ -233,7 +295,15 @@ func main() {
 
 	if len(otherArgs) > 0 {
 		for _, arg := range otherArgs {
-			searchDatabase(db, arg)
+			if alfred {
+				b, err := json.Marshal(getAlfredFormat(db, arg))
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Printf("%s\n", b)
+			} else {
+				searchDatabase(db, arg)
+			}
 		}
 	}
 }

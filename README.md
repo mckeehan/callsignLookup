@@ -14,3 +14,5 @@ echo "$RESULT" | tr '|' '\n'
 echo -n "http://maps.apple.com/?address="
 echo "$RESULT" | awk -F'|' '{ print $3 "," $4 }' | sed 's/ /+/g'
 ```
+
+The `-alfred` flag was added to support outputting queery results in a JSON format that is used by the [Alfred Script Filter](https://www.alfredapp.com/help/workflows/inputs/script-filter/json/).

@@ -16,6 +16,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// Item represents an item in Alfred
 type Item struct {
 	// UID          string `json:"uid"`
 	// Type         string `json:"type"`
@@ -34,10 +35,12 @@ type Item struct {
 	// } `json:"icon"`
 }
 
+// Items represents a list of items
 type Items struct {
 	Items []Item `json:"items"`
 }
 
+// Record represents a record in the database
 type Record struct {
 	Callsign  string `json:"callsign"`
 	Firstname string `json:"firstname"`
@@ -290,7 +293,7 @@ func main() {
 		if debug {
 			log.Printf("Reloading database from %s\n", inputFile)
 		}
-		// createDatabase(db, inputFile)
+		createDatabase(db, inputFile)
 	}
 
 	if len(otherArgs) > 0 {
